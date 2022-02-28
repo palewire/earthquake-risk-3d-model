@@ -1,1 +1,1 @@
-A ready-to-print, three-dimensional model of seismic risk in the United States
+A ready-to-print, three-dimensional model of seismic risk in the United States. An extension of Peter Aldhous’s 2022 tutorial, [“Mapping and geographic data analysis with the simple features package in R”](https://github.com/paldhous/NICAR/blob/master/2022/r-sf-mapping-geo-analysis/r-sf-mapping-geo-analysis.Rmd)
