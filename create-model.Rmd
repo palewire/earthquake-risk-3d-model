@@ -1,0 +1,71 @@
+# U.S. Earthquake Risk in 3D
+
+Import libraries.
+
+```{r}
+library(sf)
+library(stars)
+library(rayshader)
+library(tidyverse)
+```
+
+Import data.
+
+```{r}
+seismic <- st_read("https://raw.githubusercontent.com/paldhous/NICAR/master/2022/r-sf-mapping-geo-analysis/seismic.geojson")
+```
+
+Convert the value ranges into integers.
+
+```{r}
+seismic_mutated <- seismic %>%
+  mutate(ValueRange = recode(ValueRange, "< 1" = 1, "1 - 2" = 2, "2 - 5" = 5, "5 - 10" = 10, "10 - 14" = 14))
+```
+
+Write out a GeoJSON.
+
+```{r}
+st_write(seismic_mutated, "seismic.geojson", delete_dsn = TRUE)
+```
+
+Convert GeoJSON to raster.
+
+```{r}
+seismic_raster <- st_rasterize(seismic_mutated)
+```
+
+Plot it
+
+```{r}
+plot(seismic_raster)
+```
+
+Write it out to tif file.
+
+```{r}
+write_stars(seismic_raster, "seismic.tif")
+```
+
+Read the tif back in as a raster file object.
+
+```{r}
+seismic_tif = raster::raster("seismic.tif")
+```
+
+Convert the tif into a matrix.
+
+```{r}
+seismic_matrix = matrix(raster::extract(seismic_tif, raster::extent(seismic_tif)), nrow = ncol(seismic_tif), ncol = nrow(seismic_tif))
+```
+
+Render the matrix as a 3D model and write out an STL file.
+
+```{r}
+seismic_matrix %>%
+  sphere_shade(texture = "desert") %>%
+  add_shadow(ray_shade(seismic_matrix, zscale = 0.1, maxsearch = 300), 0.45) %>% 
+  add_shadow(ambient_shade(seismic_matrix, zscale = 0.1), 0.5) %>%
+  plot_3d(seismic_matrix, zscale = 0.1, fov = 0, theta = 135, zoom = 0.85, phi = 25, windowsize = c(1000, 800))
+render_snapshot()
+save_3dprint("seismic.stl", maxwidth = 4, unit = "in")
+```
